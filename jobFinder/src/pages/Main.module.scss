@@ -27,7 +27,6 @@
       .searchInput {
         padding: 0.5rem;
         width: 95%;
-        direction: ltr;
       }
     }
   }
@@ -44,7 +43,6 @@
     border-radius: 10px;
     .tagTitle {
       color: white;
-      direction: ltr;
       font-size: 1rem;
       margin-top: 0;
     }
@@ -96,7 +94,8 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    padding: 2rem;
+    padding: 0 2rem;
+    align-self: self-end;
 
     .link {
       text-decoration: none;
@@ -125,6 +124,31 @@
           padding: 1.5rem;
         }
       }
+    }
+  }
+
+  .pagination {
+    margin: 2rem;
+    display: flex;
+    gap: 0.5vw;
+    direction: rtl;
+
+    .paginationButton {
+      &:hover {
+        outline: 2px solid lightblue;
+        opacity: 0.85;
+      }
+
+      &.current {
+        color: white;
+        background-color: rgb(30, 124, 155);
+      }
+      font-weight: bold;
+      min-width: 2.5rem;
+      font-size: 1.2rem;
+      padding: 0.2rem;
+      cursor: pointer;
+      border-radius: 5px;
     }
   }
 }

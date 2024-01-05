@@ -1,15 +1,29 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+// Array containing URLs and their corresponding job types
+const jobUrls = [
+  {
+    url: 'https://www.gotfriends.co.il/jobslobby/software/react-developer/',
+    type: 'React Developer',
+  },
+  {
+    url: 'https://www.gotfriends.co.il/jobslobby/software/frontend-developer/',
+    type: 'Front-end Developer',
+  },
+  {
+    url: 'https://www.gotfriends.co.il/jobslobby/software/full-stack-developer/',
+    type: 'Full-stack Developer',
+  },
+];
+
 const scrapeJobs = async (url, excludeStrings = []) => {
   try {
     let pagenum = 1;
     let allItems = [];
     let totalPages;
-    let logoUrl = 'https://www.gotfriends.co.il/images/logo.png';
 
     console.log(`Starting scraping process for ${url}...`);
-
     const homePageResponse = await axios.get('https://www.gotfriends.co.il/');
 
     while (true) {
@@ -96,7 +110,7 @@ const scrapeJobs = async (url, excludeStrings = []) => {
           jobDescription,
           tags: structuredTags,
           link,
-          logoUrl,
+          logoUrl: 'https://www.gotfriends.co.il/images/logo.png',
         });
       });
 
@@ -119,27 +133,16 @@ const scrapeJobs = async (url, excludeStrings = []) => {
   }
 };
 
-const scrapeBothJobs = async (excludeStrings = []) => {
+const scrapeAllJobs = async (excludeStrings = []) => {
   try {
-    const reactDeveloperUrl =
-      'https://www.gotfriends.co.il/jobslobby/software/react-developer/';
-    const headOfFrontEndTeamUrl =
-      'https://www.gotfriends.co.il/jobslobby/software/frontend-developer/';
+    const allItems = [];
 
-    const allReactDeveloperJobs = await scrapeJobs(
-      reactDeveloperUrl,
-      excludeStrings
-    );
-    console.log('Scraping for React Developer jobs completed.');
-
-    const allHeadOfFrontEndTeamJobs = await scrapeJobs(
-      headOfFrontEndTeamUrl,
-      excludeStrings
-    );
-    console.log('Scraping for Front-end jobs completed.');
-
-    const allItems = [...allReactDeveloperJobs, ...allHeadOfFrontEndTeamJobs];
-    console.log('Combined results:', allItems);
+    for (const job of jobUrls) {
+      console.log(`Scraping for ${job.type} jobs...`);
+      const jobs = await scrapeJobs(job.url, excludeStrings);
+      allItems.push(...jobs);
+      console.log(`Scraping for ${job.type} jobs completed.`);
+    }
 
     return allItems;
   } catch (error) {
@@ -148,6 +151,6 @@ const scrapeBothJobs = async (excludeStrings = []) => {
   }
 };
 
-module.exports = scrapeBothJobs;
+module.exports = scrapeAllJobs;
 
-// You can call scrapeBothJobs() to start the scraping process for both URLs.
+// You can call scrapeAllJobs() to start the scraping process for all URLs.

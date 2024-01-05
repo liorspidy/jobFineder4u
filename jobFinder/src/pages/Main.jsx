@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Item from '../components/Item';
 import classes from './Main.module.scss';
+import Pagination from '../components/Pagination';
 
 const Main = () => {
   const [allItems, setAllItems] = useState([]);
@@ -9,6 +10,10 @@ const Main = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [excludeStringsArray, setExcludeStringsArray] = useState([]);
+  const [currentPage, setCurrentPage] = useState(
+    +localStorage.getItem('currentPage')
+  );
+  const itemsPerPage = 10;
 
   useEffect(() => {
     // Load data from local storage when the component mounts
@@ -21,6 +26,11 @@ const Main = () => {
     const storedTags = localStorage.getItem('excludeStringsArray');
     if (storedTags) {
       setExcludeStringsArray(JSON.parse(storedTags));
+    }
+
+    const storedCurrentPage = localStorage.getItem('currentPage');
+    if (storedCurrentPage) {
+      setCurrentPage(+storedCurrentPage);
     }
   }, []);
 
@@ -67,7 +77,12 @@ const Main = () => {
 
   const handleSearch = () => {
     fetchData();
+    setCurrentPage(1);
   };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = allItems.slice(indexOfFirstItem, indexOfLastItem);
 
   if (error) {
     return <div className={classes.error}>Error: {error}</div>;
@@ -115,12 +130,29 @@ const Main = () => {
       </div>
       {isLoading && <div className={classes.loading}>Loading...</div>}
       {!isLoading && (
+        <Pagination
+          allItems={allItems}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
+      {!isLoading && (
         <div className={classes.list}>
-          {allItems.map((item, index) => (
+          {currentItems.map((item, index) => (
             <Item key={index} item={item} />
           ))}
         </div>
       )}
+      {!isLoading && (
+        <Pagination
+          allItems={allItems}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
+      ;
     </div>
   );
 };

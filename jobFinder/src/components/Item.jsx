@@ -1,9 +1,14 @@
 /* eslint-disable react/prop-types */
-// Item.js
-
 import classes from '../pages/Main.module.scss';
 
 const Item = ({ item }) => {
+  const removeHyphenIfNeeded = (content) => {
+    if (content.startsWith('-')) {
+      return content.substring(1); // Remove the hyphen
+    }
+    return content;
+  };
+
   return (
     <a
       href={item.link}
@@ -20,7 +25,7 @@ const Item = ({ item }) => {
           <p className={classes.jobDesc}>{item.jobDescription}</p>
           <ul className={classes.req}>
             {item.tags.map((tag, idx) => (
-              <li key={idx}>{tag.content}</li>
+              <li key={idx}>{removeHyphenIfNeeded(tag.content)}</li>
             ))}
           </ul>
         </div>
