@@ -63,7 +63,7 @@ const Main = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:3001/scrape?excludeStrings=${excludeStrings}`
+        `http://localhost:3001/scrape/gotfriends?excludeStrings=${excludeStrings}`
       );
       setAllItems(response.data);
       setIsLoading(false);
@@ -105,13 +105,15 @@ const Main = () => {
           <input
             className={classes.searchInput}
             type="text"
-            placeholder="Enter tags..."
+            placeholder="Enter tags to exclude..."
             value={inputValue}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
           />
           <div className={classes.tagsContainer}>
-            <p className={classes.tagTitle}>These are your searching tags:</p>
+            <p className={classes.tagTitle}>
+              These are your excluded phrases tags:
+            </p>
             <div className={classes.tagsContent}>
               {excludeStringsArray.map((tag, index) => (
                 <span

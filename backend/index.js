@@ -6,9 +6,9 @@ const port = 3001;
 
 app.use(cors());
 
-app.get('/scrape', async (req, res) => {
+app.get('/scrape/gotfriends', async (req, res) => {
   try {
-    console.log('Received scraping request from client.');
+    console.log('Received scraping request from gotfriends client.');
 
     const excludeStrings = req.query.excludeStrings
       ? req.query.excludeStrings.split(',')

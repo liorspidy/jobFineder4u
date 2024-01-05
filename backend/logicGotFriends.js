@@ -24,7 +24,6 @@ const scrapeJobs = async (url, excludeStrings = []) => {
     let totalPages;
 
     console.log(`Starting scraping process for ${url}...`);
-    const homePageResponse = await axios.get('https://www.gotfriends.co.il/');
 
     while (true) {
       console.log(`Fetching page ${pagenum}...`);
@@ -110,6 +109,7 @@ const scrapeJobs = async (url, excludeStrings = []) => {
           jobDescription,
           tags: structuredTags,
           link,
+          siteName: 'gotfriends',
           logoUrl: 'https://www.gotfriends.co.il/images/logo.png',
         });
       });
