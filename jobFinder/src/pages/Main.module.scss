@@ -1,0 +1,163 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 5vw;
+
+    .buttonAndMore {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .searching {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 2vh;
+
+      .searchInput {
+        padding: 0.5rem;
+        width: 95%;
+        direction: ltr;
+      }
+    }
+  }
+
+  .resultsCount {
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
+
+  .tagsContainer {
+    padding: 2rem;
+    border: 1px solid white;
+    border-radius: 10px;
+    .tagTitle {
+      color: white;
+      direction: ltr;
+      font-size: 1rem;
+      margin-top: 0;
+    }
+    .tagsContent {
+      color: black;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+
+      .tag {
+        &:hover {
+          outline: 2px solid lightblue;
+          opacity: 0.85;
+        }
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        border-radius: 5px;
+        background-color: #ccc;
+        padding: 0.25rem;
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .searchButton {
+    color: white;
+    font-size: 1.5rem;
+    border-radius: 10px;
+    background-color: purple;
+    padding: 1rem;
+    margin: 1rem;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      outline: 2px solid lightblue;
+    }
+
+    &:active {
+      scale: 0.9;
+    }
+  }
+  .list {
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 2rem;
+
+    .link {
+      text-decoration: none;
+      .itemContainer {
+        direction: rtl;
+        max-width: 800px;
+        background-color: #3d3d3d;
+        border-bottom: 1px solid #ccc;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        .logoContainer {
+          background-color: white;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: flex-end;
+          .logo {
+            padding: 1rem;
+          }
+        }
+
+        .content {
+          padding: 1.5rem;
+        }
+      }
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30vh;
+  color: white;
+  gap: 1rem;
+
+  &::after {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 5px solid #ccc;
+    border-top-color: #000;
+    animation: spin 1s infinite linear;
+  }
+
+  .error {
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+}
