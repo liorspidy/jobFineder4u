@@ -14,9 +14,7 @@ app.get('/scrape/gotfriends', async (req, res) => {
     const excludeStrings = req.query.excludeStrings
       ? req.query.excludeStrings.split(',')
       : [];
-    const pressCounterLimit = req.query.pressCounterLimit
-      ? parseInt(req.query.pressCounterLimit)
-      : 2;
+
     const data = await gotFriendsScraper(excludeStrings);
 
     console.log('Successfully scraped data. Sending response to client.');

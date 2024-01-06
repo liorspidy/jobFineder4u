@@ -3,6 +3,8 @@ import axios from 'axios';
 import classes from './Main.module.scss';
 import Item from '../components/Item';
 import Pagination from '../components/Pagination';
+import FilterRadioButtons from '../components/FilterRadioButtons';
+import SearchBar from '../components/SearchBar';
 
 const Main = () => {
   const [allItems, setAllItems] = useState([]);
@@ -13,7 +15,7 @@ const Main = () => {
   const [currentPage, setCurrentPage] = useState(
     +localStorage.getItem('currentPage') || 1
   );
-  const [selectedSite, setSelectedSite] = useState('');
+  const [selectedSite, setSelectedSite] = useState('all');
 
   const itemsPerPage = 10;
 
@@ -64,24 +66,43 @@ const Main = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      let response;
-      if (selectedSite === 'drushim') {
-        response = await axios.get(
+      let drushimData = [];
+      let gotfriendsData = [];
+
+      if (selectedSite === 'drushim' || selectedSite === 'all') {
+        const drushimResponse = await axios.get(
           `http://localhost:3001/scrape/drushim?excludeStrings=${excludeStringsArray.join(
             ','
-          )}&pressCounterLimit=2`
+          )}`
         );
-      } else if (selectedSite === 'gotfriends') {
-        response = await axios.get(
+        drushimData = drushimResponse.data;
+      }
+
+      if (selectedSite === 'gotfriends' || selectedSite === 'all') {
+        const gotfriendsResponse = await axios.get(
           `http://localhost:3001/scrape/gotfriends?excludeStrings=${excludeStringsArray.join(
             ','
           )}`
         );
+        gotfriendsData = gotfriendsResponse.data;
       }
 
-      setAllItems(response.data);
+      // Concatenate the two sets of data if "All" is selected
+      if (selectedSite === 'all') {
+        setAllItems([...drushimData, ...gotfriendsData]);
+        localStorage.setItem(
+          'allItems',
+          JSON.stringify([...drushimData, ...gotfriendsData])
+        );
+      } else if (selectedSite === 'drushim') {
+        setAllItems(drushimData);
+        localStorage.setItem('allItems', JSON.stringify(drushimData));
+      } else if (selectedSite === 'gotfriends') {
+        setAllItems(gotfriendsData);
+        localStorage.setItem('allItems', JSON.stringify(gotfriendsData));
+      }
+
       setIsLoading(false);
-      localStorage.setItem('allItems', JSON.stringify(response.data));
     } catch (error) {
       console.error('Failed to fetch data:', error);
       setError('Failed to fetch data. Please try again later.');
@@ -93,55 +114,26 @@ const Main = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = allItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  if (error) {
-    return <div className={classes.error}>Error: {error}</div>;
-  }
-
   return (
     <div className={classes.container}>
       <div className={classes.actions}>
-        <div className={classes.buttonAndMore}>
-          <button onClick={fetchData} className={classes.searchButton}>
-            Start Search
-          </button>
-          <div className={classes.searchFilters}>
-            <button onClick={() => handleSiteSelection('drushim')}>
-              Drushim
-            </button>
-            <button onClick={() => handleSiteSelection('gotfriends')}>
-              GotFriends
-            </button>
-            <button onClick={() => handleSiteSelection('all')}>All</button>
-          </div>
-        </div>
-        <input
-          className={classes.searchInput}
-          type="text"
-          placeholder="Enter tags to exclude..."
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
+        <button onClick={fetchData} className={classes.searchButton}>
+          Start Search
+        </button>
+        <FilterRadioButtons
+          selectedSite={selectedSite}
+          handleSiteSelection={handleSiteSelection}
         />
-        <div className={classes.tagsContainer}>
-          <p className={classes.tagTitle}>
-            These are your excluded phrases tags:
-          </p>
-          <div className={classes.tagsContent}>
-            {excludeStringsArray.map((tag, index) => (
-              <span
-                key={index}
-                className={classes.tag}
-                onClick={() => removeTag(tag)}
-              >
-                {tag}
-                <span className={classes.tagCloseIcon}>✖</span>
-              </span>
-            ))}
-          </div>
-        </div>
+        <SearchBar
+          inputValue={inputValue}
+          handleInputChange={handleInputChange}
+          handleKeyPress={handleKeyPress}
+          excludeStringsArray={excludeStringsArray}
+          removeTag={removeTag}
+        />
       </div>
       {isLoading && <div className={classes.loading}>Loading...</div>}
-      {!isLoading && !!allItems.length && (
+      {!!allItems.length && !isLoading && (
         <Pagination
           allItems={allItems}
           currentPage={currentPage}
@@ -149,14 +141,14 @@ const Main = () => {
           itemsPerPage={itemsPerPage}
         />
       )}
-      {!isLoading && !!allItems.length && (
+      {!!allItems.length && !isLoading && (
         <div className={classes.list}>
           {currentItems.map((item, index) => (
             <Item key={index} item={item} />
           ))}
         </div>
       )}
-      {!isLoading && !!allItems.length && (
+      {!!allItems.length && !isLoading && (
         <Pagination
           allItems={allItems}
           currentPage={currentPage}
