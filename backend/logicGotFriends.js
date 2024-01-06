@@ -17,7 +17,7 @@ const jobUrls = [
   },
 ];
 
-const scrapeJobs = async (url, excludeStrings = []) => {
+const scrapeJobs = async (url, jobType, excludeStrings = []) => {
   try {
     let pagenum = 1;
     let allItems = [];
@@ -73,15 +73,15 @@ const scrapeJobs = async (url, excludeStrings = []) => {
           }
         }
 
-        const structuredTags = [];
+        const structuredJobRequirements = [];
         $(element)
           .find('.desc')
           .eq(1)
           .find('p')
           .each((_, p) => {
             const rawHtml = $(p).html();
-            const tags = rawHtml.split('<br>');
-            tags.forEach((tag) => {
+            const jobRequirements = rawHtml.split('<br>');
+            jobRequirements.forEach((tag) => {
               const cleanTag = tag
                 .trim()
                 .replace(/\s+/g, ' ')
@@ -93,7 +93,7 @@ const scrapeJobs = async (url, excludeStrings = []) => {
                   break;
                 }
               }
-              structuredTags.push({ content: cleanTag });
+              structuredJobRequirements.push({ content: cleanTag });
             });
           });
 
@@ -105,9 +105,10 @@ const scrapeJobs = async (url, excludeStrings = []) => {
         }
 
         items.push({
+          type: jobType,
           title,
           jobDescription,
-          tags: structuredTags,
+          jobRequirements: structuredJobRequirements,
           link,
           siteName: 'gotfriends',
           logoUrl: 'https://www.gotfriends.co.il/images/logo.png',
@@ -133,13 +134,13 @@ const scrapeJobs = async (url, excludeStrings = []) => {
   }
 };
 
-const scrapeAllJobs = async (excludeStrings = []) => {
+const scrapeAllJobsFromGotfriends = async (excludeStrings = []) => {
   try {
     const allItems = [];
 
     for (const job of jobUrls) {
       console.log(`Scraping for ${job.type} jobs...`);
-      const jobs = await scrapeJobs(job.url, excludeStrings);
+      const jobs = await scrapeJobs(job.url, job.type, excludeStrings);
       allItems.push(...jobs);
       console.log(`Scraping for ${job.type} jobs completed.`);
     }
@@ -151,6 +152,6 @@ const scrapeAllJobs = async (excludeStrings = []) => {
   }
 };
 
-module.exports = scrapeAllJobs;
+module.exports = scrapeAllJobsFromGotfriends;
 
 // You can call scrapeAllJobs() to start the scraping process for all URLs.
