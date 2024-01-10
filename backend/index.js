@@ -32,10 +32,8 @@ app.get('/scrape/drushim', async (req, res) => {
     const excludeStrings = req.query.excludeStrings
       ? req.query.excludeStrings.split(',')
       : [];
-    const pressCounterLimit = req.query.pressCounterLimit
-      ? parseInt(req.query.pressCounterLimit)
-      : 2;
-    const data = await drushimScraper(pressCounterLimit, excludeStrings);
+
+    const data = await drushimScraper(excludeStrings);
 
     console.log('Successfully scraped data. Sending response to client.');
     res.json(data);

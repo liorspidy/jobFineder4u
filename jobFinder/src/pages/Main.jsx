@@ -64,6 +64,7 @@ const Main = () => {
   };
 
   const fetchData = async () => {
+    localStorage.setItem('pressedItems', []);
     setIsLoading(true);
     try {
       let drushimData = [];
@@ -86,6 +87,9 @@ const Main = () => {
         );
         gotfriendsData = gotfriendsResponse.data;
       }
+
+      console.log('drushim:', drushimData);
+      console.log('gotfriends:', gotfriendsData);
 
       // Concatenate the two sets of data if "All" is selected
       if (selectedSite === 'all') {

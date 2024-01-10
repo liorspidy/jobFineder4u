@@ -1,26 +1,25 @@
 const puppeteer = require('puppeteer');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 const baseUrl = 'https://www.drushim.co.il/jobs/search/react/';
 
-const drushimScraper = async (pressCounterLimit = 2, excludeStrings = []) => {
+const drushimScraper = async (excludeStrings = []) => {
   try {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     let allItems = [];
     const processedLinks = new Set();
 
-    console.log(
-      `Starting scraping process for Drushim jobs with pressCounterLimit: ${pressCounterLimit}`
-    );
+    console.log('Starting scraping process for Drushim jobs.');
 
-    while (pressCounterLimit > 0) {
-      console.log(`Press counter remaining: ${pressCounterLimit}`);
+    await page.goto(baseUrl);
+    await page.waitForSelector('.jobList_vacancy');
 
-      await page.goto(baseUrl);
-      console.log('Navigated to base URL and waiting for job list to load...');
-      await page.waitForSelector('.jobList_vacancy');
+    let jobLinks = [];
 
-      const jobLinks = await page.$$eval('.jobList_vacancy a', (links) => {
+    while (true) {
+      const newJobLinks = await page.$$eval('.jobList_vacancy a', (links) => {
         const uniqueLinks = new Set();
         links.forEach((link) => {
           if (link.href.includes('drushim.co.il/job')) {
@@ -30,70 +29,102 @@ const drushimScraper = async (pressCounterLimit = 2, excludeStrings = []) => {
         return Array.from(uniqueLinks);
       });
 
-      console.log(`Found ${jobLinks.length} unique job links on this page.`);
+      console.log(`Found ${newJobLinks.length} unique job links on this page.`);
+      jobLinks = jobLinks.concat(newJobLinks);
 
-      for (const link of jobLinks) {
-        if (processedLinks.has(link)) {
-          console.log(`Link ${link} already processed. Skipping...`);
+      const loadMoreBtnExists = await page.$('.load_jobs_btn');
+      if (loadMoreBtnExists) {
+        await page.click('.load_jobs_btn');
+        await page.waitForTimeout(2000);
+      } else {
+        console.log('Load More button not found. Exiting the loop.');
+        break;
+      }
+    }
+
+    for (let i = 0; i < jobLinks.length; i++) {
+      const link = jobLinks[i];
+
+      if (processedLinks.has(link)) {
+        console.log(`Link ${link} already processed. Skipping...`);
+        continue;
+      }
+
+      console.log(`Processing job details for link: ${link}`);
+
+      try {
+        const response = await axios.get(link);
+        const $ = cheerio.load(response.data);
+
+        const titleElement = $('h1').first();
+        const jobDescriptionElement = $('.job-details p').first();
+        const jobRequirementsElement = $('.job-requirements p').first();
+
+        if (
+          !titleElement.length ||
+          !jobDescriptionElement.length ||
+          !jobRequirementsElement.length
+        ) {
+          console.log(`Skipped job due to missing elements for link: ${link}`);
           continue;
         }
 
-        console.log(`Processing job details for link: ${link}`);
+        const title = titleElement.text().trim();
+        const jobDescription = jobDescriptionElement.text().trim();
+        const jobRequirements = jobRequirementsElement.html();
 
-        const newPage = await browser.newPage();
-        await newPage.goto(link);
+        let shouldSkip = false;
 
-        const jobDetails = await newPage.evaluate(
-          (link, excludeStrings) => {
-            const title = document.querySelector('h1')?.innerText.trim() || '';
-            const jobDescription =
-              document.querySelector('.job-details p')?.innerText.trim() || '';
-            const jobRequirements =
-              document.querySelector('.job-requirements p')?.innerHTML || '';
+        for (const exclude of excludeStrings) {
+          // Check for exact matches using word boundaries
+          const regex = new RegExp(`\\b${exclude}\\b`, 'gi');
 
-            let shouldSkip = false;
-            for (const exclude of excludeStrings) {
-              if (
-                title.toLowerCase().includes(exclude.toLowerCase()) ||
-                jobDescription.toLowerCase().includes(exclude.toLowerCase()) ||
-                jobRequirements.toLowerCase().includes(exclude.toLowerCase())
-              ) {
-                shouldSkip = true;
-                break;
-              }
-            }
+          if (
+            regex.test(title) ||
+            regex.test(jobDescription) ||
+            regex.test(jobRequirements)
+          ) {
+            shouldSkip = true;
+            break;
+          }
 
-            if (shouldSkip) {
-              console.log(
-                `Skipped job titled "${title}" due to exclusion criteria.`
-              );
-              return null;
-            }
-
-            return {
-              type: 'React Developer',
-              title,
-              jobDescription,
-              jobRequirements,
-              link,
-              siteName: 'drushim',
-              logoUrl: 'https://www.drushim.co.il/_nuxt/img/logo.e75be30.svg',
-            };
-          },
-          link,
-          excludeStrings
-        );
-
-        if (jobDetails) {
-          allItems.push(jobDetails);
-          processedLinks.add(link);
-          console.log(`Added job titled "${jobDetails.title}" to the list.`);
+          // Check for partial matches using .includes()
+          if (
+            title.toLowerCase().includes(exclude.toLowerCase()) ||
+            jobDescription.toLowerCase().includes(exclude.toLowerCase()) ||
+            jobRequirements.toLowerCase().includes(exclude.toLowerCase())
+          ) {
+            shouldSkip = true;
+            break;
+          }
         }
 
-        await newPage.close();
-      }
+        if (shouldSkip) {
+          console.log(
+            `Skipped job titled "${title}" due to exclusion criteria.`
+          );
+          continue;
+        }
 
-      pressCounterLimit--;
+        const jobDetails = {
+          type: 'React Developer', // Adjust as needed
+          title,
+          jobDescription,
+          jobRequirements,
+          link,
+          siteName: 'drushim',
+          logoUrl: 'https://www.drushim.co.il/_nuxt/img/logo.e75be30.svg',
+        };
+
+        allItems.push(jobDetails);
+        processedLinks.add(link);
+        console.log(`Added job titled "${jobDetails.title}" to the list.`);
+      } catch (error) {
+        console.error(
+          `Error fetching or parsing job details for link: ${link}`,
+          error
+        );
+      }
     }
 
     await browser.close();
